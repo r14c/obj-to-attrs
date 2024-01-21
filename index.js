@@ -43,38 +43,31 @@ function objToAttrs(object, options = {}) {
         quote: '"',
         separator: ' '
     }, options);
-    let result = [];
-    for (let [argument, value] of Object.entries(object || {})) {
-        if (value === null) {
-            // we'll take this as a sign that the attr should be omitted
-            continue;
+    const result = Object.entries(object || {}).map(([argument, value]) => {
+        // If a helper is available, use that
+        if (typeof helpers[argument] === 'function') {
+            const helped = helpers[argument](value);
+            return (typeof helped === 'object') ? objToAttrs(helped, options) : helped;
         }
-        else {
-            // If a helper is available, use that
-            if (typeof helpers[argument] === 'function') {
-                const helped = helpers[argument](value);
-                return (typeof helped === 'object') ? objToAttrs(helped, options) : helped;
-            }
-            // Turn dataTest into data-test
-            argument = argument.replace(/[A-Z]/g, function (letter) {
-                return '-' + letter.toLowerCase();
-            });
-            // If it's a boolean attribute, we don't need =""
-            if (boolean.includes(argument)) {
-                return argument;
-            }
-            // argument="value"
-            const quote = options.quote;
-            if (typeof value === 'string') {
-                value = value.replace(/&/g, '&amp;')
-                    .replace(/"/g, '&quot;')
-                    .replace(/'/g, '&#39;')
-                    .replace(/</g, '&lt;')
-                    .replace(/>/g, '&gt;');
-            }
-            result.push(argument + options.assignment + quote + value + quote);
+        // Turn dataTest into data-test
+        argument = argument.replace(/[A-Z]/g, (letter) => {
+            return '-' + letter.toLowerCase();
+        });
+        // If it's a boolean attribute, we don't need =""
+        if (boolean.includes(argument)) {
+            return argument;
         }
-    }
+        // argument="value"
+        const quote = options.quote;
+        if (typeof value === 'string') {
+            value = value.replace(/&/g, '&amp;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;');
+        }
+        return argument + options.assignment + quote + value + quote;
+    });
     return result.join(options.separator);
 }
 exports.objToAttrs = objToAttrs;
