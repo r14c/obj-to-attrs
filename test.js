@@ -1,7 +1,7 @@
 'use strict';
 
 var test = require('tape');
-var objToAttrs = require('./');
+var { objToAttrs } = require('./index.js');
 
 test('obj-to-attrs', function (t) {
 	t.plan(13);
